@@ -1,0 +1,8 @@
+.vscode
+build
+dist
+*.egg-info
+*.pyc
+__pycache__
+*.whl
+*.pyd
