@@ -1,7 +1,9 @@
 import os
 import sys
 
-CODE_SERVER_RELEASES = "https://api.github.com/repos/coder/code-server/releases/{version}"
+CODE_SERVER_RELEASES = (
+    "https://api.github.com/repos/coder/code-server/releases/{version}"
+)
 CODE_SERVER_VERSION = os.environ.get("CODE_SERVER_VERSION", "latest")
 
 DEFAULT_EXTENSIONS = [
@@ -11,8 +13,8 @@ DEFAULT_EXTENSIONS = [
 ]
 
 DEFAULT_SETTINGS = {
-    "User" : {
-        "window.menuBarVisibility" : "classic",
+    "User": {
+        "window.menuBarVisibility": "classic",
         "workbench.startupEditor": "none",
         "files.autoSave": "onWindowChange",
         "explorer.confirmDragAndDrop": False,
@@ -23,11 +25,11 @@ DEFAULT_SETTINGS = {
         "editor.formatOnSave": True,
         "notebook.formatOnSave.enabled": True,
         "terminal.integrated.fontFamily": "Consolas",
-        "terminal.integrated.detectLocale": "off"
+        "terminal.integrated.detectLocale": "off",
     },
-    "Machine" : {
+    "Machine": {
         "workbench.startupEditor": "none",
         "terminal.integrated.detectLocale": "off",
-        "python.defaultInterpreterPath" : sys.executable
-    }
+        "python.defaultInterpreterPath": sys.executable,
+    },
 }

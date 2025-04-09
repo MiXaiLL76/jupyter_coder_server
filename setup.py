@@ -26,6 +26,7 @@ class PostInstallCommand(install):
         value = super().run()
 
         from jupyter_code_server.cli import install_all
+
         install_all()
         return value
 
