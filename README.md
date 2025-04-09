@@ -8,6 +8,9 @@ My job is left to make these two technologies friends and provide the ability to
 
 This library works in tandem with the [jupyter-server-proxy](https://github.com/jupyterhub/jupyter-server-proxy) library, which in turn allows you to create additional servers inside Jupyter.
 
+![vscode_button](https://raw.githubusercontent.com/MiXaiLL76/jupyter_code_server/assets/vscode_button.png)
+![vscode_proxy](https://raw.githubusercontent.com/MiXaiLL76/jupyter_code_server/assets/vscode_proxy.png)
+
 ## Install
 
 Just run the installation from pypi and enjoy
