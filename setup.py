@@ -10,7 +10,7 @@ def readme():
     return content
 
 
-version_file = "jupyter_code_server/version.py"
+version_file = "jupyter_coder_server/version.py"
 
 
 def get_version():
@@ -25,8 +25,8 @@ class PostInstallCommand(install):
 
     def run(self):
         value = super().run()
-        if os.environ.get("JUPYTER_CODE_SERVER_SKIP_INSTALL") is None:
-            from jupyter_code_server.cli import install_all
+        if os.environ.get("jupyter_coder_server_SKIP_INSTALL") is None:
+            from jupyter_coder_server.cli import install_all
 
             install_all()
         return value
@@ -35,12 +35,12 @@ class PostInstallCommand(install):
 __version__, __author__ = get_version()
 
 setuptools.setup(
-    name="jupyter_code_server",
+    name="jupyter_coder_server",
     version=__version__,
     description="VSCODE integration in jupyter-lab",
     long_description=readme(),
     long_description_content_type="text/markdown",
-    url="https://github.com/MiXaiLL76/jupyter_code_server",
+    url="https://github.com/MiXaiLL76/jupyter_coder_server",
     author=__author__,
     author_email="mike.milos@yandex.ru",
     packages=setuptools.find_packages(),
@@ -60,9 +60,9 @@ setuptools.setup(
     entry_points={
         "jupyter_serverproxy_servers": [
             # name = packagename:function_name
-            "jupyter_code_server = jupyter_code_server:setup_jupyter_code_server",
+            "jupyter_coder_server = jupyter_coder_server:setup_jupyter_coder_server",
         ],
-        "console_scripts": ["jupyter_code_server = jupyter_code_server:main"],
+        "console_scripts": ["jupyter_coder_server = jupyter_coder_server:main"],
     },
     install_requires=["jupyter-server-proxy", "tornado"],
     cmdclass={

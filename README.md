@@ -1,4 +1,4 @@
-# jupyter_code_server
+# jupyter_coder_server
 
 ## Disclaimer
 
@@ -10,7 +10,7 @@ This library works in tandem with the [jupyter-server-proxy](https://github.com/
 
 | VSCode button                                                                                                              | Web Code Server (proxy)                                                                                                  |
 | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| ![vscode_button](https://raw.githubusercontent.com/MiXaiLL76/jupyter_code_server/refs/heads/main/assets/vscode_button.png) | ![vscode_proxy](https://raw.githubusercontent.com/MiXaiLL76/jupyter_code_server/refs/heads/main/assets/vscode_proxy.png) |
+| ![vscode_button](https://raw.githubusercontent.com/MiXaiLL76/jupyter_coder_server/refs/heads/main/assets/vscode_button.png) | ![vscode_proxy](https://raw.githubusercontent.com/MiXaiLL76/jupyter_coder_server/refs/heads/main/assets/vscode_proxy.png) |
 
 ## Install
 
@@ -18,7 +18,7 @@ Just run the installation from pypi and enjoy
 **After installation, be sure to restart the server (if it is running in docker, then restart docker)**
 
 ```bash
-pip install jupyter_code_server
+pip install jupyter_coder_server
 ```
 
 ### Extra install
@@ -30,7 +30,7 @@ By default, this library installs the latest version of code-server on your devi
 Disabling automatic installation of code-server
 
 ```bash
-JUPYTER_CODE_SERVER_SKIP_INSTALL=1 pip install jupyter_code_server
+jupyter_coder_server_SKIP_INSTALL=1 pip install jupyter_coder_server
 ```
 
 Installing a specific [version of code-server](https://api.github.com/repos/coder/code-server/releases)
@@ -42,13 +42,13 @@ Installing a specific [version of code-server](https://api.github.com/repos/code
 Installation example **tag_name "v4.99.1"**
 
 ```bash
-CODE_SERVER_VERSION=211138150 pip install jupyter_code_server
+CODE_SERVER_VERSION=211138150 pip install jupyter_coder_server
 ```
 
 ### CLI Commands
 
 ```bash
-usage: jupyter_code_server [-h] [--version] [--install] [--install-server] [--install-extensions] [--install-settings] [--patch-tornado]
+usage: jupyter_coder_server [-h] [--version] [--install] [--install-server] [--install-extensions] [--install-settings] [--patch-tornado]
 
 options:
  -h, --help show this help message and exit
@@ -71,8 +71,8 @@ Since the [code-server](https://github.com/coder/code-server) project has an MIT
 ## Citation
 
 ```
-@article{jupyter_code_server,
-title = {{jupyter_code_server}: VSCODE integration in jupyter-lab},
+@article{jupyter_coder_server,
+title = {{jupyter_coder_server}: VSCODE integration in jupyter-lab},
 author = {MiXaiLL76},
 year = {2024}
 }

@@ -1,4 +1,4 @@
-def setup_jupyter_code_server():
+def setup_jupyter_coder_server():
     return {
         "command": [
             "code-server",

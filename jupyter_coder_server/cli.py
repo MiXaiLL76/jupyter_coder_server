@@ -7,8 +7,8 @@ import json
 import argparse
 
 try:
-    from jupyter_code_server.version import __version__
-    from jupyter_code_server.options import (
+    from jupyter_coder_server.version import __version__
+    from jupyter_coder_server.options import (
         CODE_SERVER_RELEASES,
         CODE_SERVER_VERSION,
         DEFAULT_EXTENSIONS,
@@ -24,7 +24,7 @@ except ImportError:
 
     __version__ = "__dev__"
 
-LOGGER = logging.getLogger("jupyter_code_server")
+LOGGER = logging.getLogger("jupyter_coder_server")
 LOGGER.setLevel(logging.INFO)
 logging.debug("logger")
 
@@ -158,7 +158,7 @@ def install_all():
 
 
 def main():
-    config = argparse.ArgumentParser(prog="jupyter_code_server")
+    config = argparse.ArgumentParser(prog="jupyter_coder_server")
     config.add_argument(
         "--version", action="version", version=f"%(prog)s: {__version__}"
     )
