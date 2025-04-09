@@ -1,3 +1,4 @@
+import os
 import setuptools
 from setuptools.command.install import install
 from importlib.util import module_from_spec, spec_from_file_location
@@ -24,10 +25,10 @@ class PostInstallCommand(install):
 
     def run(self):
         value = super().run()
+        if os.environ.get("JUPYTER_CODE_SERVER_SKIP_INSTALL") is None:
+            from jupyter_code_server.cli import install_all
 
-        from jupyter_code_server.cli import install_all
-
-        install_all()
+            install_all()
         return value
 
 
@@ -63,7 +64,7 @@ setuptools.setup(
         ],
         "console_scripts": ["jupyter_code_server = jupyter_code_server:main"],
     },
-    install_requires=["jupyter-server-proxy"],
+    install_requires=["jupyter-server-proxy", "tornado"],
     cmdclass={
         "install": PostInstallCommand,
     },

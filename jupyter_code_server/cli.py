@@ -163,7 +163,9 @@ def main():
         "--version", action="version", version=f"%(prog)s: {__version__}"
     )
     config.add_argument(
-        "--install", action="store_true", help="Install code-server and extensions"
+        "--install",
+        action="store_true",
+        help="Install code-server, extensions ad settings",
     )
     config.add_argument(
         "--install-server", action="store_true", help="Install code-server"
