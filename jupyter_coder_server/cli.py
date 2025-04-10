@@ -13,6 +13,9 @@ try:
         CODE_SERVER_VERSION,
         DEFAULT_EXTENSIONS,
         DEFAULT_SETTINGS,
+        CODE_SERVER_INSTALL_DIR,
+        FILE_BROWSER_RELEASES,
+        FILE_BROWSER_VERSION,
     )
 except ImportError:
     from options import (
@@ -20,6 +23,9 @@ except ImportError:
         CODE_SERVER_VERSION,
         DEFAULT_EXTENSIONS,
         DEFAULT_SETTINGS,
+        CODE_SERVER_INSTALL_DIR,
+        FILE_BROWSER_RELEASES,
+        FILE_BROWSER_VERSION,
     )
 
     __version__ = "__dev__"
@@ -59,9 +65,12 @@ def install_server():
 
     assert download_url is not None, "download_url is None"
 
-    package_file = os.path.expanduser("~/.local/lib/code-server/package.json")
+    install_dir = pathlib.Path(os.path.expanduser(CODE_SERVER_INSTALL_DIR))
+    package_file = install_dir.joinpath("lib/code-server/package.json")
 
-    if os.path.exists(package_file):
+    LOGGER.info(f"package_file: {package_file}")
+
+    if package_file.exists():
         LOGGER.warning("code-server is already installed")
         with open(package_file, "r") as f:
             package_json = json.load(f)
@@ -69,20 +78,25 @@ def install_server():
             LOGGER.info(f"installed_version: {installed_version}")
             if installed_version == latest_tag:
                 LOGGER.info("code-server is already up to date")
-                return
+                if os.path.exists(f"{CODE_SERVER_INSTALL_DIR}/bin/code-server"):
+                    return
             else:
                 LOGGER.info("code-server is outdated")
                 LOGGER.info("updating code-server")
 
-    pathlib.Path(os.path.expanduser("~/.local/bin/")).mkdir(parents=True, exist_ok=True)
-    pathlib.Path(os.path.expanduser("~/.local/lib/")).mkdir(parents=True, exist_ok=True)
+    (install_dir / "lib").mkdir(parents=True, exist_ok=True)
+    (install_dir / "lib").mkdir(parents=True, exist_ok=True)
 
-    os.system(f"curl -fL {download_url} | tar -C ~/.local/lib -xz")
-    os.system("rm -rf ~/.local/lib/code-server ~/.local/bin/code-server")
+    os.system(f"curl -fL {download_url} | tar -C {CODE_SERVER_INSTALL_DIR}/lib -xz")
     os.system(
-        f"mv ~/.local/lib/code-server-{latest_tag}-linux-amd64 ~/.local/lib/code-server"
+        f"rm -rf {CODE_SERVER_INSTALL_DIR}/lib/code-server {CODE_SERVER_INSTALL_DIR}/bin/code-server"
     )
-    os.system("ln -s ~/.local/lib/code-server/bin/code-server ~/.local/bin/code-server")
+    os.system(
+        f"mv {CODE_SERVER_INSTALL_DIR}/lib/code-server-{latest_tag}-linux-amd64 {CODE_SERVER_INSTALL_DIR}/lib/code-server"
+    )
+    os.system(
+        f"ln -s {CODE_SERVER_INSTALL_DIR}/lib/code-server/bin/code-server {CODE_SERVER_INSTALL_DIR}/bin/code-server"
+    )
 
 
 def install_extensions():
@@ -94,13 +108,12 @@ def install_extensions():
         "--disable-telemetry",
         "--disable-update-check",
         "--disable-workspace-trust",
-        "--extensions-dir ~/.local/share/code-server/extensions",
+        f"--extensions-dir {CODE_SERVER_INSTALL_DIR}/share/code-server/extensions",
         "--install-extension",
         "{extension}",
     ]
-    pathlib.Path(os.path.expanduser("~/.local/share/code-server/extensions")).mkdir(
-        parents=True, exist_ok=True
-    )
+    install_dir = pathlib.Path(os.path.expanduser(CODE_SERVER_INSTALL_DIR))
+    (install_dir / "share/code-server/extensions").mkdir(parents=True, exist_ok=True)
 
     for extension in DEFAULT_EXTENSIONS:
         LOGGER.info(f"installing extension: {extension}")
@@ -108,16 +121,16 @@ def install_extensions():
 
 
 def install_settings():
-    for profile in ["User", "Machine"]:
-        pathlib.Path(
-            os.path.expanduser(f"~/.local/share/code-server/{profile}/")
-        ).mkdir(parents=True, exist_ok=True)
+    install_dir = pathlib.Path(os.path.expanduser(CODE_SERVER_INSTALL_DIR))
 
-        settings_file = os.path.expanduser(
-            f"~/.local/share/code-server/{profile}/settings.json"
-        )
+    for profile in ["User", "Machine"]:
+        profile_dir = install_dir.joinpath(f"share/code-server/{profile}")
+        profile_dir.mkdir(parents=True, exist_ok=True)
+
+        settings_file = profile_dir.joinpath("settings.json")
+
         settings = {}
-        if os.path.exists(settings_file):
+        if settings_file.exists():
             LOGGER.warning(f"settings.json allready exists for {profile}")
 
             with open(settings_file) as fd:
@@ -150,11 +163,64 @@ def patch_tornado():
         LOGGER.info("DONE!")
 
 
+def install_filebrowser():
+    """
+    https://filebrowser.org/installation
+    """
+    LOGGER.info(f"FILE_BROWSER_VERSION: {FILE_BROWSER_VERSION}")
+
+    response = requests.get(
+        FILE_BROWSER_RELEASES.format(version=FILE_BROWSER_VERSION),
+        headers={"Accept": "application/vnd.github+json"},
+    )
+
+    assert response.status_code == 200, response.text
+
+    release_dict = response.json()
+
+    latest_tag = release_dict["tag_name"]
+    LOGGER.info(f"latest_tag: {latest_tag}")
+
+    if latest_tag.startswith("v"):
+        latest_tag = latest_tag[1:]
+
+    download_url = None
+    for assets in release_dict["assets"]:
+        if assets["name"] == "linux-amd64-filebrowser.tar.gz":
+            download_url = assets["browser_download_url"]
+            LOGGER.info(f"download_url: {download_url}")
+            break
+
+    assert download_url is not None, "download_url is None"
+
+    install_dir = pathlib.Path(os.path.expanduser(CODE_SERVER_INSTALL_DIR))
+    filebrowser_file = install_dir.joinpath("bin/filebrowser")
+
+    LOGGER.info(f"filebrowser_file: {filebrowser_file}")
+
+    if filebrowser_file.exists():
+        LOGGER.warning("filebrowser_file is already installed")
+        return
+
+    (install_dir / "bin" / "file-browser").mkdir(parents=True, exist_ok=True)
+
+    os.system(
+        f"rm -rf {CODE_SERVER_INSTALL_DIR}/bin/filebrowser {CODE_SERVER_INSTALL_DIR}/bin/file-browser/*"
+    )
+    os.system(
+        f"curl -fL {download_url} | tar -C {CODE_SERVER_INSTALL_DIR}/bin/file-browser -xz"
+    )
+    os.system(
+        f"ln -s {CODE_SERVER_INSTALL_DIR}/bin/file-browser/filebrowser {CODE_SERVER_INSTALL_DIR}/bin/filebrowser"
+    )
+
+
 def install_all():
     install_server()
     install_settings()
     patch_tornado()
     install_extensions()
+    install_filebrowser()
 
 
 def main():
@@ -177,6 +243,9 @@ def main():
         "--install-settings", action="store_true", help="Install settings"
     )
     config.add_argument(
+        "--install-filebrowser", action="store_true", help="Install Web File Browser"
+    )
+    config.add_argument(
         "--patch-tornado", action="store_true", help="Monkey patch tornado.websocket"
     )
     args = config.parse_args()
@@ -192,3 +261,6 @@ def main():
 
     if args.install or args.install_extensions:
         install_extensions()
+
+    if args.install or args.install_filebrowser:
+        install_filebrowser()

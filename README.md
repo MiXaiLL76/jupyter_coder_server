@@ -30,7 +30,7 @@ By default, this library installs the latest version of code-server on your devi
 Disabling automatic installation of code-server
 
 ```bash
-jupyter_coder_server_SKIP_INSTALL=1 pip install jupyter_coder_server
+SKIP_INSTALL=1 pip install jupyter_coder_server
 ```
 
 Installing a specific [version of code-server](https://api.github.com/repos/coder/code-server/releases)
@@ -61,6 +61,9 @@ options:
 ```
 
 ## Requirements
+
+1. Linux amd64
+2. Installed CURL
 
 For more details [see here](https://github.com/coder/code-server?tab=readme-ov-file#requirements)
 

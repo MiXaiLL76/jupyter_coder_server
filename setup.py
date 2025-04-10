@@ -25,10 +25,12 @@ class PostInstallCommand(install):
 
     def run(self):
         value = super().run()
-        if os.environ.get("jupyter_coder_server_SKIP_INSTALL") is None:
+
+        if len(os.environ.get("SKIP_INSTALL", "")) == 0:
             from jupyter_coder_server.cli import install_all
 
             install_all()
+
         return value
 
 
@@ -44,6 +46,7 @@ setuptools.setup(
     author=__author__,
     author_email="mike.milos@yandex.ru",
     packages=setuptools.find_packages(),
+    include_package_data=True,
     classifiers=[
         "Development Status :: 4 - Beta",
         "License :: OSI Approved :: MIT License",
@@ -60,7 +63,8 @@ setuptools.setup(
     entry_points={
         "jupyter_serverproxy_servers": [
             # name = packagename:function_name
-            "jupyter_coder_server = jupyter_coder_server:setup_jupyter_coder_server",
+            "vscode_server_fb = jupyter_coder_server:setup_filebrowser",
+            "vscode_server = jupyter_coder_server:setup_jupyter_coder_server",
         ],
         "console_scripts": ["jupyter_coder_server = jupyter_coder_server:main"],
     },

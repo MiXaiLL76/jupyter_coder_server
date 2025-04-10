@@ -5,6 +5,12 @@ CODE_SERVER_RELEASES = (
     "https://api.github.com/repos/coder/code-server/releases/{version}"
 )
 CODE_SERVER_VERSION = os.environ.get("CODE_SERVER_VERSION", "latest")
+CODE_SERVER_INSTALL_DIR = os.environ.get("CODE_SERVER_INSTALL_DIR", "~/.local")
+
+FILE_BROWSER_RELEASES = (
+    "https://api.github.com/repos/filebrowser/filebrowser/releases/{version}"
+)
+FILE_BROWSER_VERSION = os.environ.get("FILE_BROWSER_VERSION", "latest")
 
 DEFAULT_EXTENSIONS = [
     "ms-python.python",
