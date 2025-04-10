@@ -1,5 +1,8 @@
 # jupyter_coder_server
 
+[![PyPI](https://img.shields.io/pypi/v/jupyter-coder-server)](https://pypi.org/project/jupyter_coder_server)
+[![PyPI Downloads](https://img.shields.io/pypi/dm/jupyter-coder-server.svg?label=PyPI%20downloads)](https://pypi.org/project/jupyter_coder_server/)
+
 ## Disclaimer
 
 Many developers are forced to use jupyterlab\\jupyterhub during work, without the ability to use VSCODE.
