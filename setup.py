@@ -62,7 +62,7 @@ setuptools.setup(
         "Framework :: Jupyter :: JupyterLab :: 3",
         "Framework :: Jupyter :: JupyterLab :: 4",
         "Framework :: Jupyter :: JupyterLab :: Extensions",
-        "Framework :: Jupyter :: JupyterLab :: Extensions :: Prebuilt"
+        "Framework :: Jupyter :: JupyterLab :: Extensions :: Prebuilt",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
     ],
     python_requires=">=3.9",
