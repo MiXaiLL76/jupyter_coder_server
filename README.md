@@ -36,31 +36,35 @@ Disabling automatic installation of code-server
 SKIP_INSTALL=1 pip install jupyter_coder_server
 ```
 
-Installing a specific [version of code-server](https://api.github.com/repos/coder/code-server/releases)
+Installing a specific [version of code-server](https://github.com/coder/code-server/releases)
 
 > To do this, you need to set env CODE_SERVER_VERSION
 > CODE_SERVER_VERSION - lataset by default
-> Since version search is not controlled by github tags, it is better to look at the api and search for the **id** of the release.
+> Since version search is controlled by github tags.
 
 Installation example **tag_name "v4.99.1"**
 
 ```bash
-CODE_SERVER_VERSION=211138150 pip install jupyter_coder_server
+CODE_SERVER_VERSION=v4.99.1 pip install jupyter_coder_server
 ```
 
 ### CLI Commands
 
 ```bash
-usage: jupyter_coder_server [-h] [--version] [--install] [--install-server] [--install-extensions] [--install-settings] [--patch-tornado]
+usage: jupyter_coder_server [-h] [--version] [--install] [--install-server] [--install-extensions] [--install-settings] [--install-filebrowser] [--patch-tornado] [--remove-server] [--remove-filebrowser]
 
 options:
- -h, --help show this help message and exit
- --version show program's version number and exit
- --install Install code-server, extensions ad settings
- --install-server Install code-server
- --install-extensions Install extensions
- --install-settings Install settings
- --patch-tornado Monkey patch tornado.websocket
+  -h, --help            show this help message and exit
+  --version             show program's version number and exit
+  --install             Install coder-server, extensions, settings and Web File Browser
+  --install-server      Install coder-server
+  --install-extensions  Install extensions
+  --install-settings    Install settings
+  --install-filebrowser
+                        Install Web File Browser
+  --patch-tornado       Monkey patch tornado.websocket
+  --remove-server       Remove coder-server
+  --remove-filebrowser  Remove Web File Browser
 ```
 
 ## Requirements
