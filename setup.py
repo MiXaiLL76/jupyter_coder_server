@@ -1,8 +1,8 @@
 import os
+import platform
 import setuptools
 from setuptools.command.install import install
 from importlib.util import module_from_spec, spec_from_file_location
-
 
 def readme():
     with open("README.md", encoding="utf-8") as f:
@@ -27,10 +27,9 @@ class PostInstallCommand(install):
         value = super().run()
 
         if len(os.environ.get("SKIP_INSTALL", "")) == 0:
-            from jupyter_coder_server.cli import install_all
-
-            install_all()
-
+            from jupyter_coder_server import CoderServer, WebFileBrowser
+            CoderServer().full_install()
+            WebFileBrowser().full_install()
         return value
 
 
@@ -63,8 +62,8 @@ setuptools.setup(
     entry_points={
         "jupyter_serverproxy_servers": [
             # name = packagename:function_name
-            "vscode_server_fb = jupyter_coder_server:setup_filebrowser",
-            "vscode_server = jupyter_coder_server:setup_jupyter_coder_server",
+            "vscode_server_fb = jupyter_coder_server:WebFileBrowser.setup_proxy",
+            "vscode_server = jupyter_coder_server:CoderServer.setup_proxy",
         ],
         "console_scripts": ["jupyter_coder_server = jupyter_coder_server:main"],
     },
