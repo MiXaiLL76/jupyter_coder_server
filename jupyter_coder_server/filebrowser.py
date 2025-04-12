@@ -98,7 +98,7 @@ class WebFileBrowser:
         )
 
     def clean_up(self, full: bool = False):
-        LOGGER.info("Clean up")
+        LOGGER.info(f"Clean up {self.__class__.__name__}")
         files_to_remove = [self.install_dir.joinpath("bin/filebrowser")]
         if full:
             files_to_remove.append(self.install_dir.joinpath("lib/file-browser"))
@@ -109,6 +109,11 @@ class WebFileBrowser:
         for file in files_to_remove:
             if file.exists():
                 LOGGER.info(f"Remove {file}")
+
+                if file.is_symlink():
+                    file.unlink()
+                    continue
+
                 if file.is_dir():
                     shutil.rmtree(file)
                 else:

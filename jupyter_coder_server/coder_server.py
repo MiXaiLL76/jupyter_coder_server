@@ -194,7 +194,7 @@ class CoderServer:
             LOGGER.info("DONE!")
 
     def clean_up(self, full: bool = False):
-        LOGGER.info("Clean up")
+        LOGGER.info(f"Clean up {self.__class__.__name__}")
         files_to_remove = [
             self.install_dir.joinpath("lib/code-server"),
             self.install_dir.joinpath("bin/code-server"),
@@ -211,6 +211,11 @@ class CoderServer:
         for file in files_to_remove:
             if file.exists():
                 LOGGER.info(f"Remove {file}")
+
+                if file.is_symlink():
+                    file.unlink()
+                    continue
+
                 if file.is_dir():
                     shutil.rmtree(file)
                 else:

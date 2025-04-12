@@ -38,6 +38,9 @@ def main():
         "--patch-tornado", action="store_true", help="Monkey patch tornado.websocket"
     )
     config.add_argument(
+        "--remove", action="store_true", help="Remove coder-server and Web File Browser"
+    )
+    config.add_argument(
         "--remove-server", action="store_true", help="Remove coder-server"
     )
     config.add_argument(
@@ -61,11 +64,11 @@ def main():
     if args.install or args.install_extensions:
         server.install_extensions()
 
-    if args.remove_server:
-        server.clean_up(full=True)
-
     if args.install or args.install_filebrowser:
         file_browser.install_filebrowser()
 
-    if args.remove_filebrowser:
+    if args.remove or args.remove_server:
+        server.clean_up(full=True)
+
+    if args.remove or args.remove_filebrowser:
         file_browser.clean_up(full=True)

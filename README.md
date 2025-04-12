@@ -51,7 +51,7 @@ CODE_SERVER_VERSION=v4.99.1 pip install jupyter_coder_server
 ### CLI Commands
 
 ```bash
-usage: jupyter_coder_server [-h] [--version] [--install] [--install-server] [--install-extensions] [--install-settings] [--install-filebrowser] [--patch-tornado] [--remove-server] [--remove-filebrowser]
+usage: jupyter_coder_server [-h] [--version] [--install] [--install-server] [--install-extensions] [--install-settings] [--install-filebrowser] [--patch-tornado] [--remove] [--remove-server] [--remove-filebrowser]
 
 options:
   -h, --help            show this help message and exit
@@ -63,6 +63,7 @@ options:
   --install-filebrowser
                         Install Web File Browser
   --patch-tornado       Monkey patch tornado.websocket
+  --remove              Remove coder-server and Web File Browser
   --remove-server       Remove coder-server
   --remove-filebrowser  Remove Web File Browser
 ```
