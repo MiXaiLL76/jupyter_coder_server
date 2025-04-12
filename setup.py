@@ -1,4 +1,5 @@
 import os
+import platform
 import setuptools
 from setuptools.command.install import install
 from importlib.util import module_from_spec, spec_from_file_location
@@ -24,6 +25,9 @@ class PostInstallCommand(install):
     """Post-installation for installation mode."""
 
     def run(self):
+        if platform.system().lower() != "linux":
+            raise Exception("Only Linux is supported")
+
         value = super().run()
 
         if len(os.environ.get("SKIP_INSTALL", "")) == 0:
@@ -31,6 +35,7 @@ class PostInstallCommand(install):
 
             CoderServer().full_install()
             WebFileBrowser().full_install()
+
         return value
 
 
@@ -52,11 +57,12 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.9",
-        "Programming Language :: Python :: 3.10",
-        "Programming Language :: Python :: 3.11",
-        "Programming Language :: Python :: 3.12",
-        "Programming Language :: Python :: 3.13",
+        "Framework :: Jupyter",
+        "Framework :: Jupyter :: JupyterLab",
+        "Framework :: Jupyter :: JupyterLab :: 3",
+        "Framework :: Jupyter :: JupyterLab :: 4",
+        "Framework :: Jupyter :: JupyterLab :: Extensions",
+        "Framework :: Jupyter :: JupyterLab :: Extensions :: Prebuilt"
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
     ],
     python_requires=">=3.9",
