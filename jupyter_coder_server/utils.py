@@ -4,6 +4,7 @@ from subprocess import PIPE, STDOUT, Popen
 import requests
 import logging
 import os
+
 try:
     import jupyter_coder_server
 
@@ -15,13 +16,14 @@ logging.basicConfig(level=logging.INFO)
 LOGGER = logging.getLogger("jupyter_coder_server")
 LOGGER.setLevel(logging.INFO)
 
+
 def download(url: str, fname: str, chunk_size=1024):
     resp = requests.get(url, stream=True)
-    total = int(resp.headers.get('content-length', 0))
-    with open(str(fname), 'wb') as file, tqdm.tqdm(
+    total = int(resp.headers.get("content-length", 0))
+    with open(str(fname), "wb") as file, tqdm.tqdm(
         desc="Download to: " + str(fname),
         total=total,
-        unit='iB',
+        unit="iB",
         unit_scale=True,
         unit_divisor=1024,
     ) as bar:
@@ -29,10 +31,16 @@ def download(url: str, fname: str, chunk_size=1024):
             size = file.write(data)
             bar.update(size)
 
-def untar(file : str, output_path : str = ""):
+
+def untar(file: str, output_path: str = ""):
     with tarfile.open(name=str(file)) as tar:
-        for member in tqdm.tqdm(iterable=tar.getmembers(), total=len(tar.getmembers()), desc="Untar from: " + str(file)):
+        for member in tqdm.tqdm(
+            iterable=tar.getmembers(),
+            total=len(tar.getmembers()),
+            desc="Untar from: " + str(file),
+        ):
             tar.extract(member=member, path=output_path)
+
 
 def start_cmd(cmd: str):
     """
@@ -63,5 +71,6 @@ def start_cmd(cmd: str):
         if child_process.returncode != 0:
             LOGGER.error(f"{cmd} failed!")
 
-def get_icon(name : str):
+
+def get_icon(name: str):
     return os.path.join(jupyter_coder_server_dir, "icons", f"{name}.svg")

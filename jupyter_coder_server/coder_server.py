@@ -5,12 +5,15 @@ from tornado import websocket
 import json
 import sys
 import shutil
+
 try:
     from jupyter_coder_server.utils import LOGGER, untar, download, start_cmd, get_icon
 except ImportError:
     from utils import LOGGER, untar, download, start_cmd, get_icon
 
-CODE_SERVER_RELEASES = "https://api.github.com/repos/coder/code-server/releases/{version}"
+CODE_SERVER_RELEASES = (
+    "https://api.github.com/repos/coder/code-server/releases/{version}"
+)
 
 DEFAULT_EXTENSIONS = [
     "ms-python.python",
@@ -40,27 +43,35 @@ DEFAULT_SETTINGS = {
     },
 }
 
-class CoderServer():
-    def __init__(self, version : str = "latest", install_dir : str = "~/.local"):
+
+class CoderServer:
+    def __init__(self, version: str = "latest", install_dir: str = "~/.local"):
         self.CODE_SERVER_VERSION = os.environ.get("CODE_SERVER_VERSION", version)
-        self.install_dir : pathlib.Path = pathlib.Path(os.environ.get("CODE_SERVER_INSTALL_DIR", install_dir)).expanduser()
-        self.package_file : pathlib.Path = self.install_dir.joinpath("lib/code-server/package.json")
-    
+        self.install_dir: pathlib.Path = pathlib.Path(
+            os.environ.get("CODE_SERVER_INSTALL_DIR", install_dir)
+        ).expanduser()
+        self.package_file: pathlib.Path = self.install_dir.joinpath(
+            "lib/code-server/package.json"
+        )
+
     def install_server(self):
         """
         https://coder.com/docs/code-server/install
         """
-        
+
         LOGGER.info(f"install_dir: {self.install_dir}")
         LOGGER.info(f"package_file: {self.package_file}")
         LOGGER.info(f"CODE_SERVER_VERSION: {self.CODE_SERVER_VERSION}")
 
         if self.CODE_SERVER_VERSION.startswith("v"):
-            api_link = CODE_SERVER_RELEASES.format(version=f"tags/{self.CODE_SERVER_VERSION}")
+            api_link = CODE_SERVER_RELEASES.format(
+                version=f"tags/{self.CODE_SERVER_VERSION}"
+            )
         else:
             api_link = CODE_SERVER_RELEASES.format(version=self.CODE_SERVER_VERSION)
-        
-        response = requests.get(api_link,
+
+        response = requests.get(
+            api_link,
             headers={
                 "Accept": "application/vnd.github+json",
                 "X-GitHub-Api-Version": "2022-11-28",
@@ -72,7 +83,7 @@ class CoderServer():
         release_dict = response.json()
         latest_tag = release_dict["tag_name"]
         LOGGER.info(f"latest_tag: {latest_tag}")
-        
+
         if latest_tag.startswith("v"):
             latest_tag = latest_tag[1:]
 
@@ -108,7 +119,7 @@ class CoderServer():
         else:
             LOGGER.info("Downloading code-server")
             download(download_url, download_file)
-        
+
         self.clean_up()
 
         output_path = self.install_dir.joinpath("lib")
@@ -118,11 +129,13 @@ class CoderServer():
             untar(download_file, output_path=str(self.install_dir.joinpath("lib")))
         else:
             LOGGER.info(f"code-server-{latest_tag}-linux-amd64 is already exists")
-        
-        self.install_dir.joinpath("lib/code-server").symlink_to(valid_dir_name)
-        self.install_dir.joinpath("bin/code-server").symlink_to(output_path.joinpath(f"{valid_dir_name}/bin/code-server"))
 
-    def install_extensions(self, extensions : list[str] = [], force : bool = False):
+        self.install_dir.joinpath("lib/code-server").symlink_to(valid_dir_name)
+        self.install_dir.joinpath("bin/code-server").symlink_to(
+            output_path.joinpath(f"{valid_dir_name}/bin/code-server")
+        )
+
+    def install_extensions(self, extensions: list[str] = [], force: bool = False):
         """
         https://coder.com/docs/user-guides/workspace-access/vscode#adding-extensions-to-custom-images
         """
@@ -136,8 +149,10 @@ class CoderServer():
             "--install-extension",
             "{extension}",
         ]
-        
-        self.install_dir.joinpath("share/code-server/extensions").mkdir(parents=True, exist_ok=True)
+
+        self.install_dir.joinpath("share/code-server/extensions").mkdir(
+            parents=True, exist_ok=True
+        )
 
         for extension in DEFAULT_EXTENSIONS + extensions:
             LOGGER.info(f"installing extension: {extension}")
@@ -169,7 +184,7 @@ class CoderServer():
     def patch_tornado(self):
         if websocket._default_max_message_size == 10 * 1024 * 1024:
             LOGGER.info("monkey patch for tornado.websocket")
-            
+
             data = pathlib.Path(websocket.__file__).read_text(encoding="UTF-8")
             data = data.replace(
                 "_default_max_message_size = 10 * 1024 * 1024",
@@ -178,21 +193,21 @@ class CoderServer():
             pathlib.Path(websocket.__file__).write_text(data, encoding="UTF-8")
             LOGGER.info("DONE!")
 
-    def clean_up(self, full : bool = False):
+    def clean_up(self, full: bool = False):
         LOGGER.info("Clean up")
         files_to_remove = [
             self.install_dir.joinpath("lib/code-server"),
-            self.install_dir.joinpath("bin/code-server")
+            self.install_dir.joinpath("bin/code-server"),
         ]
         if full:
             files_to_remove.append(self.install_dir.joinpath("share/code-server"))
-            
+
             for file in pathlib.Path("/tmp/").glob("code-server*"):
                 files_to_remove.append(file)
-            
+
             for file in self.install_dir.joinpath("lib").glob("code-server*"):
                 files_to_remove.append(file)
-        
+
         for file in files_to_remove:
             if file.exists():
                 LOGGER.info(f"Remove {file}")
@@ -206,7 +221,7 @@ class CoderServer():
         self.install_settings()
         self.install_extensions()
         self.patch_tornado()
-    
+
     @staticmethod
     def setup_proxy():
         return {
@@ -222,6 +237,6 @@ class CoderServer():
             "timeout": 10,
             "launcher_entry": {
                 "title": "VS Code",
-                "icon_path" : get_icon("vscode"),
+                "icon_path": get_icon("vscode"),
             },
         }

@@ -1,8 +1,8 @@
 import os
-import platform
 import setuptools
 from setuptools.command.install import install
 from importlib.util import module_from_spec, spec_from_file_location
+
 
 def readme():
     with open("README.md", encoding="utf-8") as f:
@@ -28,6 +28,7 @@ class PostInstallCommand(install):
 
         if len(os.environ.get("SKIP_INSTALL", "")) == 0:
             from jupyter_coder_server import CoderServer, WebFileBrowser
+
             CoderServer().full_install()
             WebFileBrowser().full_install()
         return value
