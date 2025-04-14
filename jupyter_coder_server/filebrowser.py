@@ -24,6 +24,16 @@ class WebFileBrowser:
             os.environ.get("WEB_FILE_BROWSER_INSTALL_DIR", install_dir)
         ).expanduser()
 
+    def check_install(self):
+        filebrowser_file = self.install_dir.joinpath("bin/filebrowser")
+        LOGGER.info(f"filebrowser: {filebrowser_file}")
+        if filebrowser_file.exists():
+            LOGGER.info("filebrowser is already installed")
+            return True
+        else:
+            LOGGER.warning("filebrowser is not installed")
+            return False
+
     def install_filebrowser(self):
         """
         https://filebrowser.org/installation
@@ -51,7 +61,11 @@ class WebFileBrowser:
 
         assert response.status_code == 200, response.text
 
-        release_dict = response.json()
+        try:
+            release_dict = response.json()
+        except Exception as e:
+            LOGGER.error(f"Error parsing response: {response.text}")
+            raise e
 
         latest_tag = release_dict["tag_name"]
         LOGGER.info(f"latest_tag: {latest_tag}")
@@ -122,8 +136,11 @@ class WebFileBrowser:
     def full_install(self):
         self.install_filebrowser()
 
-    @staticmethod
-    def setup_proxy():
+    @classmethod
+    def setup_proxy(cls: "WebFileBrowser"):
+        if not cls().check_install():
+            cls().full_install()
+
         return {
             "command": [
                 "filebrowser",

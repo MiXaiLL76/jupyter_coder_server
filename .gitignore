@@ -7,3 +7,6 @@ __pycache__
 *.whl
 *.pyd
 filebrowser.db
+node_modules
+.yarn
+.ipynb_checkpoints

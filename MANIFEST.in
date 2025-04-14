@@ -1,1 +1,2 @@
 include jupyter_coder_server/icons/*.svg
+include jupyter_coder_server/labextensions/*.json

@@ -4,13 +4,17 @@ from subprocess import PIPE, STDOUT, Popen
 import requests
 import logging
 import os
+import json
+import sys
 
 try:
     import jupyter_coder_server
+    from jupyter_coder_server.version import __version__
 
     jupyter_coder_server_dir = os.path.dirname(jupyter_coder_server.__file__)
 except ImportError:
     jupyter_coder_server_dir = "./jupyter_coder_server"
+    __version__ = "__dev__"
 
 logging.basicConfig(level=logging.INFO)
 LOGGER = logging.getLogger("jupyter_coder_server")
@@ -74,3 +78,44 @@ def start_cmd(cmd: str):
 
 def get_icon(name: str):
     return os.path.join(jupyter_coder_server_dir, "icons", f"{name}.svg")
+
+
+def install_labextensions():
+    share_files = [
+        "install.json",
+        "package.json",
+    ]
+    etc_files = [
+        "jupyter_coder_server.json",
+    ]
+
+    def rewrite_config(in_path, out_path):
+        LOGGER.info(f"Rewrite config: {in_path} -> {out_path}")
+        os.makedirs(os.path.dirname(out_path), exist_ok=True)
+
+        with open(in_path, "r") as rf, open(out_path, "w") as wf:
+            data = json.load(rf)
+            if "version" in data:
+                data["version"] = __version__
+            json.dump(data, wf, indent=4)
+
+    data_dir = os.path.dirname(os.path.dirname(sys.executable))
+
+    for file in share_files:
+        rewrite_config(
+            os.path.join(jupyter_coder_server_dir, "labextensions", file),
+            os.path.join(
+                data_dir,
+                "share",
+                "jupyter",
+                "labextensions",
+                "jupyter_coder_server",
+                file,
+            ),
+        )
+
+    for file in etc_files:
+        rewrite_config(
+            os.path.join(jupyter_coder_server_dir, "labextensions", file),
+            os.path.join(data_dir, "etc", "jupyter", "jupyter_server_config.d", file),
+        )

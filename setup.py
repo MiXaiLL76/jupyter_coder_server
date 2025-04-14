@@ -1,4 +1,3 @@
-import os
 import platform
 import setuptools
 from setuptools.command.install import install
@@ -30,11 +29,9 @@ class PostInstallCommand(install):
 
         value = super().run()
 
-        if len(os.environ.get("SKIP_INSTALL", "")) == 0:
-            from jupyter_coder_server import CoderServer, WebFileBrowser
+        import jupyter_coder_server
 
-            CoderServer().full_install()
-            WebFileBrowser().full_install()
+        jupyter_coder_server.install_labextensions()
 
         return value
 
@@ -53,19 +50,20 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     include_package_data=True,
     classifiers=[
-        "Development Status :: 4 - Beta",
-        "License :: OSI Approved :: MIT License",
-        "Operating System :: OS Independent",
-        "Programming Language :: Python :: 3",
         "Framework :: Jupyter",
         "Framework :: Jupyter :: JupyterLab",
-        "Framework :: Jupyter :: JupyterLab :: 3",
         "Framework :: Jupyter :: JupyterLab :: 4",
         "Framework :: Jupyter :: JupyterLab :: Extensions",
         "Framework :: Jupyter :: JupyterLab :: Extensions :: Prebuilt",
-        "Topic :: Scientific/Engineering :: Artificial Intelligence",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
     ],
-    python_requires=">=3.9",
+    python_requires=">=3.8",
     entry_points={
         "jupyter_serverproxy_servers": [
             # name = packagename:function_name

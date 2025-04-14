@@ -28,14 +28,6 @@ pip install jupyter_coder_server
 
 By default, this library installs the latest version of code-server on your device in the **~/.local/lib** directory
 
-> If you do not want automatic installation, you can do it later or disable it altogether.
-
-Disabling automatic installation of code-server
-
-```bash
-SKIP_INSTALL=1 pip install jupyter_coder_server
-```
-
 Installing a specific [version of code-server](https://github.com/coder/code-server/releases)
 
 > To do this, you need to set env CODE_SERVER_VERSION
@@ -45,7 +37,7 @@ Installing a specific [version of code-server](https://github.com/coder/code-ser
 Installation example **tag_name "v4.99.1"**
 
 ```bash
-CODE_SERVER_VERSION=v4.99.1 pip install jupyter_coder_server
+CODE_SERVER_VERSION=v4.99.1 jupyter_coder_server --install
 ```
 
 ### CLI Commands

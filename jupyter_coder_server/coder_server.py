@@ -54,6 +54,16 @@ class CoderServer:
             "lib/code-server/package.json"
         )
 
+    def check_install(self):
+        code_server_file = self.install_dir.joinpath("bin/code-server")
+        LOGGER.info(f"code-server: {code_server_file}")
+        if code_server_file.exists():
+            LOGGER.info("code-server is already installed")
+            return True
+        else:
+            LOGGER.warning("code-server is not installed")
+            return False
+
     def install_server(self):
         """
         https://coder.com/docs/code-server/install
@@ -78,7 +88,11 @@ class CoderServer:
             },
         )
 
-        assert response.status_code == 200, response.text
+        try:
+            release_dict = response.json()
+        except Exception as e:
+            LOGGER.error(f"Error parsing response: {response.text}")
+            raise e
 
         release_dict = response.json()
         latest_tag = release_dict["tag_name"]
@@ -227,8 +241,11 @@ class CoderServer:
         self.install_extensions()
         self.patch_tornado()
 
-    @staticmethod
-    def setup_proxy():
+    @classmethod
+    def setup_proxy(cls: "CoderServer"):
+        if not cls().check_install():
+            cls().full_install()
+
         return {
             "command": [
                 "code-server",
@@ -239,7 +256,7 @@ class CoderServer:
                 "--disable-workspace-trust",
                 "--bind-addr=0.0.0.0:{port}",
             ],
-            "timeout": 10,
+            # "timeout": 60,
             "launcher_entry": {
                 "title": "VS Code",
                 "icon_path": get_icon("vscode"),
