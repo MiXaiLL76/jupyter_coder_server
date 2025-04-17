@@ -13,6 +13,7 @@ WEB_FILE_BROWSER_RELEASES = (
 )
 FILE_BROWSER_DATABASE = os.environ.get("FILE_BROWSER_DATABASE", "/tmp/filebrowser.db")
 FILE_BROWSER_IMG_PROCESSORS = int(os.environ.get("FILE_BROWSER_IMG_PROCESSORS", "4"))
+FILE_BROWSER_ROOT_PATH = os.environ.get("FILE_BROWSER_ROOT_PATH", "/")
 
 
 class WebFileBrowser:
@@ -145,7 +146,7 @@ class WebFileBrowser:
             "command": [
                 "filebrowser",
                 "--noauth",
-                "--root=/home",
+                f"--root={FILE_BROWSER_ROOT_PATH}",
                 "--baseurl=/vscode_server_fb",
                 f"--database={FILE_BROWSER_DATABASE}",
                 f"--img-processors={FILE_BROWSER_IMG_PROCESSORS}",
