@@ -72,7 +72,7 @@ setuptools.setup(
         ],
         "console_scripts": ["jupyter_coder_server = jupyter_coder_server:main"],
     },
-    install_requires=["jupyter-server-proxy", "tornado"],
+    install_requires=["jupyter-server-proxy", "tornado", "requests"],
     cmdclass={
         "install": PostInstallCommand,
     },
