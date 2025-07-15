@@ -1,4 +1,3 @@
-import requests
 import os
 import pathlib
 from tornado import websocket
@@ -7,9 +6,16 @@ import sys
 import shutil
 
 try:
-    from jupyter_coder_server.utils import LOGGER, untar, download, start_cmd, get_icon
+    from jupyter_coder_server.utils import (
+        LOGGER,
+        untar,
+        download,
+        start_cmd,
+        get_icon,
+        get_github_json,
+    )
 except ImportError:
-    from .utils import LOGGER, untar, download, start_cmd, get_icon
+    from .utils import LOGGER, untar, download, start_cmd, get_icon, get_github_json
 
 CODE_SERVER_RELEASES = (
     "https://api.github.com/repos/coder/code-server/releases/{version}"
@@ -80,21 +86,8 @@ class CoderServer:
         else:
             api_link = CODE_SERVER_RELEASES.format(version=self.CODE_SERVER_VERSION)
 
-        response = requests.get(
-            api_link,
-            headers={
-                "Accept": "application/vnd.github+json",
-                "X-GitHub-Api-Version": "2022-11-28",
-            },
-        )
+        release_dict = get_github_json(api_link)
 
-        try:
-            release_dict = response.json()
-        except Exception as e:
-            LOGGER.error(f"Error parsing response: {response.text}")
-            raise e
-
-        release_dict = response.json()
         latest_tag = release_dict["tag_name"]
         LOGGER.info(f"latest_tag: {latest_tag}")
 

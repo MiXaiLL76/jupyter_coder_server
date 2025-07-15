@@ -1,12 +1,17 @@
-import requests
 import os
 import pathlib
 import shutil
 
 try:
-    from jupyter_coder_server.utils import LOGGER, untar, download, get_icon
+    from jupyter_coder_server.utils import (
+        LOGGER,
+        untar,
+        download,
+        get_icon,
+        get_github_json,
+    )
 except ImportError:
-    from .utils import LOGGER, untar, download, get_icon
+    from .utils import LOGGER, untar, download, get_icon, get_github_json
 
 WEB_FILE_BROWSER_RELEASES = (
     "https://api.github.com/repos/filebrowser/filebrowser/releases/{version}"
@@ -52,21 +57,7 @@ class WebFileBrowser:
                 version=self.WEB_FILE_BROWSER_VERSION
             )
 
-        response = requests.get(
-            api_link,
-            headers={
-                "Accept": "application/vnd.github+json",
-                "X-GitHub-Api-Version": "2022-11-28",
-            },
-        )
-
-        assert response.status_code == 200, response.text
-
-        try:
-            release_dict = response.json()
-        except Exception as e:
-            LOGGER.error(f"Error parsing response: {response.text}")
-            raise e
+        release_dict = get_github_json(api_link)
 
         latest_tag = release_dict["tag_name"]
         LOGGER.info(f"latest_tag: {latest_tag}")

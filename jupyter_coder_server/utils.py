@@ -1,7 +1,8 @@
 import tqdm
 import tarfile
 from subprocess import PIPE, STDOUT, Popen
-import requests
+import urllib.request
+import urllib.error
 import logging
 import os
 import json
@@ -21,19 +22,77 @@ LOGGER = logging.getLogger("jupyter_coder_server")
 LOGGER.setLevel(logging.INFO)
 
 
+def get_github_json(api_link: str):
+    try:
+        # Создаем запрос с заголовками
+        request = urllib.request.Request(
+            api_link,
+            headers={
+                "Accept": "application/vnd.github+json",
+                "X-GitHub-Api-Version": "2022-11-28",
+            },
+        )
+
+        # Выполняем запрос
+        with urllib.request.urlopen(request) as response:
+            response_data = response.read().decode("utf-8")
+
+        # Парсим JSON
+        try:
+            release_dict = json.loads(response_data)
+            return release_dict
+        except json.JSONDecodeError as e:
+            LOGGER.error(f"Error parsing response: {response_data}")
+            raise e
+
+    except urllib.error.HTTPError as e:
+        LOGGER.error(f"HTTP Error {e.code}: {e.reason}")
+        raise e
+    except urllib.error.URLError as e:
+        LOGGER.error(f"URL Error: {e.reason}")
+        raise e
+    except Exception as e:
+        LOGGER.error(f"Unexpected error: {e}")
+        raise e
+
+
 def download(url: str, fname: str, chunk_size=1024):
-    resp = requests.get(url, stream=True)
-    total = int(resp.headers.get("content-length", 0))
-    with open(str(fname), "wb") as file, tqdm.tqdm(
-        desc="Download to: " + str(fname),
-        total=total,
-        unit="iB",
-        unit_scale=True,
-        unit_divisor=1024,
-    ) as bar:
-        for data in resp.iter_content(chunk_size=chunk_size):
-            size = file.write(data)
-            bar.update(size)
+    try:
+        # Создаем запрос
+        request = urllib.request.Request(url)
+
+        # Открываем соединение
+        with urllib.request.urlopen(request) as response:
+            # Получаем размер файла из заголовков
+            content_length = response.headers.get("content-length")
+            total = int(content_length) if content_length else 0
+
+            # Открываем файл для записи и создаем progress bar
+            with open(str(fname), "wb") as file, tqdm.tqdm(
+                desc="Download to: " + str(fname),
+                total=total,
+                unit="iB",
+                unit_scale=True,
+                unit_divisor=1024,
+            ) as bar:
+                # Читаем данные порциями
+                while True:
+                    data = response.read(chunk_size)
+                    if not data:
+                        break
+
+                    size = file.write(data)
+                    bar.update(size)
+
+    except urllib.error.HTTPError as e:
+        print(f"HTTP Error {e.code}: {e.reason}")
+        raise e
+    except urllib.error.URLError as e:
+        print(f"URL Error: {e.reason}")
+        raise e
+    except Exception as e:
+        print(f"Unexpected error during download: {e}")
+        raise e
 
 
 def untar(file: str, output_path: str = ""):
