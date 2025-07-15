@@ -9,7 +9,7 @@ import shutil
 try:
     from jupyter_coder_server.utils import LOGGER, untar, download, start_cmd, get_icon
 except ImportError:
-    from utils import LOGGER, untar, download, start_cmd, get_icon
+    from .utils import LOGGER, untar, download, start_cmd, get_icon
 
 CODE_SERVER_RELEASES = (
     "https://api.github.com/repos/coder/code-server/releases/{version}"

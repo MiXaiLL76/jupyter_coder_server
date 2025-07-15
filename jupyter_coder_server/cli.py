@@ -6,8 +6,8 @@ try:
     from jupyter_coder_server.filebrowser import WebFileBrowser
 
 except ImportError:
-    from coder_server import CoderServer
-    from filebrowser import WebFileBrowser
+    from .coder_server import CoderServer
+    from .filebrowser import WebFileBrowser
 
     __version__ = "__dev__"
 

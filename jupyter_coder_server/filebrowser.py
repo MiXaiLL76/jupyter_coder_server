@@ -6,7 +6,7 @@ import shutil
 try:
     from jupyter_coder_server.utils import LOGGER, untar, download, get_icon
 except ImportError:
-    from utils import LOGGER, untar, download, get_icon
+    from .utils import LOGGER, untar, download, get_icon
 
 WEB_FILE_BROWSER_RELEASES = (
     "https://api.github.com/repos/filebrowser/filebrowser/releases/{version}"
