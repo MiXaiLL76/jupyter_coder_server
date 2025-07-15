@@ -1,4 +1,3 @@
-import tqdm
 import tarfile
 from subprocess import PIPE, STDOUT, Popen
 import urllib.request
@@ -57,6 +56,8 @@ def get_github_json(api_link: str):
 
 
 def download(url: str, fname: str, chunk_size=1024):
+    import tqdm
+
     try:
         # Создаем запрос
         request = urllib.request.Request(url)
@@ -96,6 +97,8 @@ def download(url: str, fname: str, chunk_size=1024):
 
 
 def untar(file: str, output_path: str = ""):
+    import tqdm
+
     with tarfile.open(name=str(file)) as tar:
         for member in tqdm.tqdm(
             iterable=tar.getmembers(),
