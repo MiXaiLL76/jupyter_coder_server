@@ -1,6 +1,5 @@
 import os
 import pathlib
-from tornado import websocket
 import json
 import sys
 import shutil
@@ -189,6 +188,8 @@ class CoderServer:
             LOGGER.info(f"settings.json for {profile} installed")
 
     def patch_tornado(self):
+        from tornado import websocket
+
         if websocket._default_max_message_size == 10 * 1024 * 1024:
             LOGGER.info("monkey patch for tornado.websocket")
 
