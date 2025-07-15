@@ -29,9 +29,9 @@ class PostInstallCommand(install):
 
         value = super().run()
 
-        import jupyter_coder_server
+        from jupyter_coder_server.utils import install_labextensions
 
-        jupyter_coder_server.install_labextensions()
+        install_labextensions()
 
         return value
 
