@@ -20,6 +20,31 @@ FILE_BROWSER_DATABASE = os.environ.get("FILE_BROWSER_DATABASE", "/tmp/filebrowse
 FILE_BROWSER_IMG_PROCESSORS = int(os.environ.get("FILE_BROWSER_IMG_PROCESSORS", "4"))
 FILE_BROWSER_ROOT_PATH = os.environ.get("FILE_BROWSER_ROOT_PATH", "/")
 
+def get_file_browser_base_url():
+    """
+    Get the base URL for file browser, considering Jupyter's base_url.
+    
+    If JUPYTER_SERVER_URL is set (like http://19f678851e67:8888/mixaill76/), 
+    extract the base path and prepend it to FILE_BROWSER_BASE_URL.
+    """
+    base_url = os.environ.get("FILE_BROWSER_BASE_URL", "/vscode_server_fb")
+    
+    # Check if JUPYTER_SERVER_URL contains a base path
+    jupyter_server_url = os.environ.get("JUPYTER_SERVER_URL", "")
+    if jupyter_server_url:
+        # Parse URL to extract base path (everything after the third slash)
+        # e.g., http://19f678851e67:8888/mixaill76/ -> /mixaill76
+        from urllib.parse import urlparse
+        parsed = urlparse(jupyter_server_url)
+        if parsed.path and parsed.path != "/":
+            # Remove trailing slash and prepend to base_url
+            jupyter_base = parsed.path.rstrip("/")
+            return f"{jupyter_base}{base_url}"
+    
+    return base_url
+
+FILE_BROWSER_BASE_URL = get_file_browser_base_url()
+
 
 class WebFileBrowser:
     def __init__(self, version: str = "latest", install_dir: str = "~/.local"):
@@ -138,7 +163,7 @@ class WebFileBrowser:
                 "filebrowser",
                 "--noauth",
                 f"--root={FILE_BROWSER_ROOT_PATH}",
-                "--baseurl=/vscode_server_fb",
+                f"--baseurl={FILE_BROWSER_BASE_URL}",
                 f"--database={FILE_BROWSER_DATABASE}",
                 f"--img-processors={FILE_BROWSER_IMG_PROCESSORS}",
                 "--address=0.0.0.0",
