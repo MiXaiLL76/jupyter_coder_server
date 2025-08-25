@@ -20,10 +20,10 @@ FILE_BROWSER_DATABASE = os.environ.get("FILE_BROWSER_DATABASE", "/tmp/filebrowse
 FILE_BROWSER_IMG_PROCESSORS = int(os.environ.get("FILE_BROWSER_IMG_PROCESSORS", "4"))
 FILE_BROWSER_ROOT_PATH = os.environ.get("FILE_BROWSER_ROOT_PATH", "/")
 
+
 def get_file_browser_base_url():
-    """
-    Get the base URL for file browser, considering Jupyter's base_url.
-    
+    """Get the base URL for file browser, considering Jupyter's base_url.
+
     Tries multiple methods to detect Jupyter's base_url:
     1. jupyter-lab --show-config-json | jq .ServerApp.base_url
     2. ps command to find ServerApp.base_url parameter
@@ -32,17 +32,17 @@ def get_file_browser_base_url():
     import subprocess
     import json
     import re
-    
+
     base_url = os.environ.get("FILE_BROWSER_BASE_URL", "/vscode_server_fb")
     jupyter_base = None
-    
+
     # Method 1: Try jupyter config
     try:
         result = subprocess.run(
-            ["jupyter-lab", "--show-config-json"], 
-            capture_output=True, 
-            text=True, 
-            timeout=10
+            ["jupyter-lab", "--show-config-json"],
+            capture_output=True,
+            text=True,
+            timeout=10,
         )
         if result.returncode == 0:
             config = json.loads(result.stdout)
@@ -50,21 +50,23 @@ def get_file_browser_base_url():
                 server_base_url = config["ServerApp"]["base_url"]
                 if server_base_url and server_base_url != "/":
                     jupyter_base = server_base_url.rstrip("/")
-    except (subprocess.TimeoutExpired, json.JSONDecodeError, KeyError, FileNotFoundError):
+    except (
+        subprocess.TimeoutExpired,
+        json.JSONDecodeError,
+        KeyError,
+        FileNotFoundError,
+    ):
         pass
-    
+
     # Method 2: Try ps command if first method failed
     if jupyter_base is None:
         try:
             result = subprocess.run(
-                ["ps", "axu"], 
-                capture_output=True, 
-                text=True, 
-                timeout=5
+                ["ps", "axu"], capture_output=True, text=True, timeout=5
             )
             if result.returncode == 0:
                 # Look for ServerApp.base_url in process arguments
-                pattern = r'--ServerApp\.base_url=([^\s]+)'
+                pattern = r"--ServerApp\.base_url=([^\s]+)"
                 matches = re.findall(pattern, result.stdout)
                 if matches:
                     server_base_url = matches[0]
@@ -72,21 +74,23 @@ def get_file_browser_base_url():
                         jupyter_base = server_base_url.rstrip("/")
         except (subprocess.TimeoutExpired, FileNotFoundError):
             pass
-    
+
     # Method 3: Fallback to JUPYTER_SERVER_URL (original method)
     if jupyter_base is None:
         jupyter_server_url = os.environ.get("JUPYTER_SERVER_URL", "")
         if jupyter_server_url:
             from urllib.parse import urlparse
+
             parsed = urlparse(jupyter_server_url)
             if parsed.path and parsed.path != "/":
                 jupyter_base = parsed.path.rstrip("/")
-    
+
     # Construct final URL
     if jupyter_base:
         return f"{jupyter_base}{base_url}"
-    
+
     return base_url
+
 
 FILE_BROWSER_BASE_URL = get_file_browser_base_url()
 
