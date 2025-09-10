@@ -173,9 +173,13 @@ class WebFileBrowser:
         else:
             LOGGER.info(f"{output_path.stem} is already exists")
 
-        self.install_dir.joinpath("bin/filebrowser").symlink_to(
-            output_path.joinpath("filebrowser")
-        )
+        bin_symlink_path = self.install_dir.joinpath("bin/filebrowser")
+        if bin_symlink_path.exists():
+            if bin_symlink_path.is_symlink():
+                bin_symlink_path.unlink()
+            else:
+                shutil.rmtree(bin_symlink_path)
+        bin_symlink_path.symlink_to(output_path.joinpath("filebrowser"))
 
     def clean_up(self, full: bool = False):
         LOGGER.info(f"Clean up {self.__class__.__name__}")

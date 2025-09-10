@@ -136,8 +136,21 @@ class CoderServer:
         else:
             LOGGER.info(f"code-server-{latest_tag}-linux-amd64 is already exists")
 
-        self.install_dir.joinpath("lib/code-server").symlink_to(valid_dir_name)
-        self.install_dir.joinpath("bin/code-server").symlink_to(
+        symlink_path = self.install_dir.joinpath("lib/code-server")
+        if symlink_path.exists():
+            if symlink_path.is_symlink():
+                symlink_path.unlink()
+            else:
+                shutil.rmtree(symlink_path)
+        symlink_path.symlink_to(valid_dir_name)
+
+        bin_symlink_path = self.install_dir.joinpath("bin/code-server")
+        if bin_symlink_path.exists():
+            if bin_symlink_path.is_symlink():
+                bin_symlink_path.unlink()
+            else:
+                shutil.rmtree(bin_symlink_path)
+        bin_symlink_path.symlink_to(
             output_path.joinpath(f"{valid_dir_name}/bin/code-server")
         )
 
