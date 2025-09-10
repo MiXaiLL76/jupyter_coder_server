@@ -159,9 +159,12 @@ class WebFileBrowser:
 
         download_file = pathlib.Path("/tmp/").joinpath(download_url.split("/")[-1])
 
-        if download_file.exists():
+        if download_file.exists() and download_file.stat().st_size > 0:
             LOGGER.info(f"{download_file} is already exists")
         else:
+            if download_file.exists():
+                LOGGER.warning(f"Removing corrupted file: {download_file}")
+                download_file.unlink()
             LOGGER.info("Downloading filebrowser")
             download(download_url, download_file)
 
