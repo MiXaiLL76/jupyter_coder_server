@@ -85,22 +85,27 @@ class CoderServer:
         else:
             api_link = CODE_SERVER_RELEASES.format(version=self.CODE_SERVER_VERSION)
 
-        release_dict = get_github_json(api_link)
+        try:
+            release_dict = get_github_json(api_link)
+            latest_tag = release_dict["tag_name"]
+            LOGGER.info(f"latest_tag: {latest_tag}")
 
-        latest_tag = release_dict["tag_name"]
-        LOGGER.info(f"latest_tag: {latest_tag}")
+            if latest_tag.startswith("v"):
+                latest_tag = latest_tag[1:]
 
-        if latest_tag.startswith("v"):
-            latest_tag = latest_tag[1:]
+            download_url = None
+            for assets in release_dict["assets"]:
+                if assets["name"] == f"code-server-{latest_tag}-linux-amd64.tar.gz":
+                    download_url = assets["browser_download_url"]
+                    LOGGER.info(f"download_url: {download_url}")
+                    break
 
-        download_url = None
-        for assets in release_dict["assets"]:
-            if assets["name"] == f"code-server-{latest_tag}-linux-amd64.tar.gz":
-                download_url = assets["browser_download_url"]
-                LOGGER.info(f"download_url: {download_url}")
-                break
-
-        assert download_url is not None, "download_url is None"
+            assert download_url is not None, "download_url is None"
+        except Exception as e:
+            LOGGER.warning(f"Failed to get release info from GitHub API: {e}")
+            LOGGER.info("Using hardcoded fallback for code-server v4.103.2")
+            latest_tag = "4.103.2"
+            download_url = "https://github.com/coder/code-server/releases/download/v4.103.2/code-server-4.103.2-linux-amd64.tar.gz"
 
         if self.package_file.exists():
             LOGGER.warning("code-server is already installed")

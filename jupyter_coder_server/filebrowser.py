@@ -131,22 +131,27 @@ class WebFileBrowser:
                 version=self.WEB_FILE_BROWSER_VERSION
             )
 
-        release_dict = get_github_json(api_link)
+        try:
+            release_dict = get_github_json(api_link)
+            latest_tag = release_dict["tag_name"]
+            LOGGER.info(f"latest_tag: {latest_tag}")
 
-        latest_tag = release_dict["tag_name"]
-        LOGGER.info(f"latest_tag: {latest_tag}")
+            if latest_tag.startswith("v"):
+                latest_tag = latest_tag[1:]
 
-        if latest_tag.startswith("v"):
-            latest_tag = latest_tag[1:]
+            download_url = None
+            for assets in release_dict["assets"]:
+                if assets["name"] == "linux-amd64-filebrowser.tar.gz":
+                    download_url = assets["browser_download_url"]
+                    LOGGER.info(f"download_url: {download_url}")
+                    break
 
-        download_url = None
-        for assets in release_dict["assets"]:
-            if assets["name"] == "linux-amd64-filebrowser.tar.gz":
-                download_url = assets["browser_download_url"]
-                LOGGER.info(f"download_url: {download_url}")
-                break
-
-        assert download_url is not None, "download_url is None"
+            assert download_url is not None, "download_url is None"
+        except Exception as e:
+            LOGGER.warning(f"Failed to get release info from GitHub API: {e}")
+            LOGGER.info("Using hardcoded fallback for filebrowser v2.42.5")
+            latest_tag = "2.42.5"
+            download_url = "https://github.com/filebrowser/filebrowser/releases/download/v2.42.5/linux-amd64-filebrowser.tar.gz"
 
         filebrowser_file = self.install_dir.joinpath("bin/filebrowser")
         LOGGER.info(f"filebrowser_file: {filebrowser_file}")
