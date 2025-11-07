@@ -3,6 +3,7 @@ import pathlib
 import json
 import sys
 import shutil
+import re
 
 try:
     from jupyter_coder_server.utils import (
@@ -19,7 +20,6 @@ except ImportError:
 CODE_SERVER_RELEASES = (
     "https://api.github.com/repos/coder/code-server/releases/{version}"
 )
-CODE_SERVER_DOWNLOAD_URL = os.environ.get("CODE_SERVER_DOWNLOAD_URL")
 
 DEFAULT_EXTENSIONS = [
     "ms-python.python",
@@ -86,16 +86,16 @@ class CoderServer:
         else:
             api_link = CODE_SERVER_RELEASES.format(version=self.CODE_SERVER_VERSION)
 
+        download_url = os.environ.get("CODE_SERVER_DOWNLOAD_URL")
+
         if from_folder is not None:
-            CODE_SERVER_DOWNLOAD_URL = list(
-                pathlib.Path(from_folder).glob("code-server*.tar.gz")
-            )
-            if len(CODE_SERVER_DOWNLOAD_URL) == 0:
+            found_files = list(pathlib.Path(from_folder).glob("code-server*.tar.gz"))
+            if len(found_files) == 0:
                 raise FileNotFoundError("Failed to get release info from folder!")
             else:
-                CODE_SERVER_DOWNLOAD_URL = str(CODE_SERVER_DOWNLOAD_URL[0])
+                download_url = str(found_files[0])
 
-        if CODE_SERVER_DOWNLOAD_URL is None:
+        if download_url is None:
             try:
                 release_dict = get_github_json(api_link)
                 latest_tag = release_dict["tag_name"]
@@ -104,12 +104,13 @@ class CoderServer:
                 if latest_tag.startswith("v"):
                     latest_tag = latest_tag[1:]
 
-                download_url = None
                 for assets in release_dict["assets"]:
                     if assets["name"] == f"code-server-{latest_tag}-linux-amd64.tar.gz":
                         download_url = assets["browser_download_url"]
                         LOGGER.info(f"download_url: {download_url}")
                         break
+                else:
+                    download_url = None
 
                 assert download_url is not None, "download_url is None"
             except Exception as e:
@@ -131,7 +132,6 @@ class CoderServer:
                     else:
                         LOGGER.info(f"Try install version {latest_tag}")
         else:
-            download_url = CODE_SERVER_DOWNLOAD_URL
             latest_tag = (
                 pathlib.Path(download_url)
                 .stem.replace("code-server-", "")
@@ -282,7 +282,20 @@ class CoderServer:
         self.install_settings()
 
         if from_folder is not None:
-            extensions = list(pathlib.Path(from_folder).glob("*.vsix"))
+            # Sort extensions by numeric prefix in filename to ensure correct installation order
+            # Files are named like: 01-ms-python.vscode-python-envs.vsix, 02-ms-python.debugpy.vsix
+            # This ensures dependencies are installed before main packages
+            def get_sort_key(path):
+                # Extract numeric prefix (e.g., "01" from "01-ms-python.vscode-python-envs.vsix")
+                match = re.match(r"^(\d+)-", path.name)
+                if match:
+                    return (int(match.group(1)), path.name)
+                # If no prefix, sort alphabetically at the end
+                return (float("inf"), path.name)
+
+            extensions = sorted(
+                list(pathlib.Path(from_folder).glob("*.vsix")), key=get_sort_key
+            )
         else:
             extensions = DEFAULT_EXTENSIONS
 

@@ -19,7 +19,6 @@ WEB_FILE_BROWSER_RELEASES = (
 FILE_BROWSER_DATABASE = os.environ.get("FILE_BROWSER_DATABASE", "/tmp/filebrowser.db")
 FILE_BROWSER_IMG_PROCESSORS = int(os.environ.get("FILE_BROWSER_IMG_PROCESSORS", "4"))
 FILE_BROWSER_ROOT_PATH = os.environ.get("FILE_BROWSER_ROOT_PATH", "/")
-FILE_BROWSER_DOWNLOAD_URL = os.environ.get("FILE_BROWSER_DOWNLOAD_URL")
 
 
 def get_file_browser_base_url():
@@ -132,16 +131,16 @@ class WebFileBrowser:
                 version=self.WEB_FILE_BROWSER_VERSION
             )
 
+        download_url = os.environ.get("FILE_BROWSER_DOWNLOAD_URL")
+
         if from_folder is not None:
-            FILE_BROWSER_DOWNLOAD_URL = list(
-                pathlib.Path(from_folder).glob("*filebrowser.tar.gz")
-            )
-            if len(FILE_BROWSER_DOWNLOAD_URL) == 0:
+            found_files = list(pathlib.Path(from_folder).glob("*filebrowser.tar.gz"))
+            if len(found_files) == 0:
                 raise FileNotFoundError("Failed to get release info from folder!")
             else:
-                FILE_BROWSER_DOWNLOAD_URL = str(FILE_BROWSER_DOWNLOAD_URL[0])
+                download_url = str(found_files[0])
 
-        if FILE_BROWSER_DOWNLOAD_URL is None:
+        if download_url is None:
             try:
                 release_dict = get_github_json(api_link)
                 latest_tag = release_dict["tag_name"]
@@ -150,12 +149,13 @@ class WebFileBrowser:
                 if latest_tag.startswith("v"):
                     latest_tag = latest_tag[1:]
 
-                download_url = None
                 for assets in release_dict["assets"]:
                     if assets["name"] == "linux-amd64-filebrowser.tar.gz":
                         download_url = assets["browser_download_url"]
                         LOGGER.info(f"download_url: {download_url}")
                         break
+                else:
+                    download_url = None
 
                 assert download_url is not None, "download_url is None"
             except Exception as e:
@@ -164,8 +164,7 @@ class WebFileBrowser:
                 latest_tag = "2.42.5"
                 download_url = "https://github.com/filebrowser/filebrowser/releases/download/v2.42.5/linux-amd64-filebrowser.tar.gz"
         else:
-            download_url = FILE_BROWSER_DOWNLOAD_URL
-            LOGGER.info(f"Using hardcoded fallback for filebrowser [{download_url}]")
+            LOGGER.info(f"Using environment variable for filebrowser [{download_url}]")
 
         filebrowser_file = self.install_dir.joinpath("bin/filebrowser")
         LOGGER.info(f"filebrowser_file: {filebrowser_file}")
