@@ -43,12 +43,14 @@ CODE_SERVER_VERSION=v4.99.1 jupyter_coder_server --install
 ### CLI Commands
 
 ```bash
-usage: jupyter_coder_server [-h] [--version] [--install] [--install-server] [--install-extensions] [--install-settings] [--install-filebrowser] [--patch-tornado] [--remove] [--remove-server] [--remove-filebrowser]
+usage: jupyter_coder_server [-h] [--version] [--install] [--install-from INSTALL_FROM] [--install-server] [--install-extensions] [--install-settings] [--install-filebrowser] [--patch-tornado] [--remove] [--remove-server] [--remove-filebrowser]
 
 options:
   -h, --help            show this help message and exit
   --version             show program's version number and exit
   --install             Install coder-server, extensions, settings and Web File Browser
+  --install-from INSTALL_FROM
+                        Install coder-server, extensions, settings and Web File Browser from jupyter-coder-extensions.zip
   --install-server      Install coder-server
   --install-extensions  Install extensions
   --install-settings    Install settings
@@ -59,6 +61,48 @@ options:
   --remove-server       Remove coder-server
   --remove-filebrowser  Remove Web File Browser
 ```
+
+## Extra install
+
+### Offline installation from archive
+
+For environments without internet access, you can build an archive with all dependencies and install from it.
+
+#### Step 1: Build the archive
+
+On a machine with internet access, clone the repository and build the archive:
+
+```bash
+git clone https://github.com/MiXaiLL76/jupyter_coder_server.git
+cd jupyter_coder_server
+make build_ext
+```
+
+This will create `jupyter-coder-extensions.zip` containing:
+
+- code-server binary
+- filebrowser binary
+- All VSCode extensions (Python, Jupyter, Ruff, Continue, etc.)
+
+The `make build_ext` command is smart - it won't re-download files that already exist, making it safe to re-run.
+
+#### Step 2: Transfer and install
+
+Copy `jupyter-coder-extensions.zip` to your target machine and install:
+
+```bash
+pip install jupyter_coder_server
+jupyter_coder_server --install-from jupyter-coder-extensions.zip
+```
+
+This will:
+
+1. Extract the archive to a temporary directory
+2. Install code-server, filebrowser, and all extensions from the archive
+3. Configure settings and patch tornado
+4. Clean up temporary files
+
+After installation, restart your Jupyter server to see the changes.
 
 ## Requirements
 

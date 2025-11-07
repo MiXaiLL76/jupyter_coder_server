@@ -10,3 +10,5 @@ filebrowser.db
 node_modules
 .yarn
 .ipynb_checkpoints
+ext
+jupyter-coder-extensions.zip

@@ -19,6 +19,7 @@ except ImportError:
 CODE_SERVER_RELEASES = (
     "https://api.github.com/repos/coder/code-server/releases/{version}"
 )
+CODE_SERVER_DOWNLOAD_URL = os.environ.get("CODE_SERVER_DOWNLOAD_URL")
 
 DEFAULT_EXTENSIONS = [
     "ms-python.python",
@@ -69,7 +70,7 @@ class CoderServer:
             LOGGER.warning("code-server is not installed")
             return False
 
-    def install_server(self):
+    def install_server(self, from_folder: str = None):
         """
         https://coder.com/docs/code-server/install
         """
@@ -85,45 +86,69 @@ class CoderServer:
         else:
             api_link = CODE_SERVER_RELEASES.format(version=self.CODE_SERVER_VERSION)
 
-        try:
-            release_dict = get_github_json(api_link)
-            latest_tag = release_dict["tag_name"]
-            LOGGER.info(f"latest_tag: {latest_tag}")
+        if from_folder is not None:
+            CODE_SERVER_DOWNLOAD_URL = list(
+                pathlib.Path(from_folder).glob("code-server*.tar.gz")
+            )
+            if len(CODE_SERVER_DOWNLOAD_URL) == 0:
+                raise FileNotFoundError("Failed to get release info from folder!")
+            else:
+                CODE_SERVER_DOWNLOAD_URL = str(CODE_SERVER_DOWNLOAD_URL[0])
 
-            if latest_tag.startswith("v"):
-                latest_tag = latest_tag[1:]
+        if CODE_SERVER_DOWNLOAD_URL is None:
+            try:
+                release_dict = get_github_json(api_link)
+                latest_tag = release_dict["tag_name"]
+                LOGGER.info(f"latest_tag: {latest_tag}")
 
-            download_url = None
-            for assets in release_dict["assets"]:
-                if assets["name"] == f"code-server-{latest_tag}-linux-amd64.tar.gz":
-                    download_url = assets["browser_download_url"]
-                    LOGGER.info(f"download_url: {download_url}")
-                    break
+                if latest_tag.startswith("v"):
+                    latest_tag = latest_tag[1:]
 
-            assert download_url is not None, "download_url is None"
-        except Exception as e:
-            LOGGER.warning(f"Failed to get release info from GitHub API: {e}")
-            LOGGER.info("Using hardcoded fallback for code-server v4.103.2")
-            latest_tag = "4.103.2"
-            download_url = "https://github.com/coder/code-server/releases/download/v4.103.2/code-server-4.103.2-linux-amd64.tar.gz"
+                download_url = None
+                for assets in release_dict["assets"]:
+                    if assets["name"] == f"code-server-{latest_tag}-linux-amd64.tar.gz":
+                        download_url = assets["browser_download_url"]
+                        LOGGER.info(f"download_url: {download_url}")
+                        break
 
-        if self.package_file.exists():
-            LOGGER.warning("code-server is already installed")
-            with open(self.package_file, "r") as f:
-                package_json = json.load(f)
-                installed_version = package_json["version"]
-                LOGGER.info(f"installed_version: {installed_version}")
-                if installed_version == latest_tag:
-                    if self.install_dir.joinpath("bin/code-server").exists():
-                        LOGGER.info("code-server is already up to date")
-                        return
-                else:
-                    LOGGER.info(f"Try install version {latest_tag}")
+                assert download_url is not None, "download_url is None"
+            except Exception as e:
+                LOGGER.warning(f"Failed to get release info from GitHub API: {e}")
+                latest_tag = "4.105.1"
+                download_url = f"https://github.com/coder/code-server/releases/download/v{latest_tag}/code-server-{latest_tag}-linux-amd64.tar.gz"
+                LOGGER.info(f"Using hardcoded fallback for code-server {latest_tag}")
+
+            if self.package_file.exists():
+                LOGGER.warning("code-server is already installed")
+                with open(self.package_file, "r") as f:
+                    package_json = json.load(f)
+                    installed_version = package_json["version"]
+                    LOGGER.info(f"installed_version: {installed_version}")
+                    if installed_version == latest_tag:
+                        if self.install_dir.joinpath("bin/code-server").exists():
+                            LOGGER.info("code-server is already up to date")
+                            return
+                    else:
+                        LOGGER.info(f"Try install version {latest_tag}")
+        else:
+            download_url = CODE_SERVER_DOWNLOAD_URL
+            latest_tag = (
+                pathlib.Path(download_url)
+                .stem.replace("code-server-", "")
+                .replace("-linux-amd64", "")
+                .replace(".tar", "")
+            )
+            LOGGER.info(
+                f"Using hardcoded fallback for code-server [{latest_tag}] [{download_url}]"
+            )
 
         self.install_dir.joinpath("lib").mkdir(parents=True, exist_ok=True)
         self.install_dir.joinpath("bin").mkdir(parents=True, exist_ok=True)
 
-        download_file = pathlib.Path("/tmp/").joinpath(download_url.split("/")[-1])
+        if download_url.startswith("http"):
+            download_file = pathlib.Path("/tmp/").joinpath(download_url.split("/")[-1])
+        else:
+            download_file = pathlib.Path(download_url)
 
         if download_file.exists() and download_file.stat().st_size > 0:
             LOGGER.info(f"{download_file} is already exists")
@@ -162,7 +187,9 @@ class CoderServer:
             output_path.joinpath(f"{valid_dir_name}/bin/code-server")
         )
 
-    def install_extensions(self, extensions: list[str] = [], force: bool = False):
+    def install_extensions(
+        self, extensions: list[str] = DEFAULT_EXTENSIONS, force: bool = False
+    ):
         """
         https://coder.com/docs/user-guides/workspace-access/vscode#adding-extensions-to-custom-images
         """
@@ -181,9 +208,9 @@ class CoderServer:
             parents=True, exist_ok=True
         )
 
-        for extension in DEFAULT_EXTENSIONS + extensions:
+        for extension in extensions:
             LOGGER.info(f"installing extension: {extension}")
-            start_cmd(" ".join(code_server_string).format(extension=extension))
+            start_cmd(" ".join(code_server_string).format(extension=str(extension)))
 
     def install_settings(self):
         for profile in ["User", "Machine"]:
@@ -250,10 +277,16 @@ class CoderServer:
                 else:
                     file.unlink()
 
-    def full_install(self):
-        self.install_server()
+    def full_install(self, from_folder: str = None):
+        self.install_server(from_folder)
         self.install_settings()
-        self.install_extensions()
+
+        if from_folder is not None:
+            extensions = list(pathlib.Path(from_folder).glob("*.vsix"))
+        else:
+            extensions = DEFAULT_EXTENSIONS
+
+        self.install_extensions(extensions)
         self.patch_tornado()
 
     @classmethod

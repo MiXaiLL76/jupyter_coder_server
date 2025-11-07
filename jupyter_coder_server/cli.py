@@ -1,4 +1,8 @@
 import argparse
+import zipfile
+import tempfile
+import shutil
+import pathlib
 
 try:
     from jupyter_coder_server.version import __version__
@@ -21,6 +25,12 @@ def main():
         "--install",
         action="store_true",
         help="Install coder-server, extensions, settings and Web File Browser",
+    )
+    config.add_argument(
+        "--install-from",
+        type=str,
+        default=None,
+        help="Install coder-server, extensions, settings and Web File Browser from jupyter-coder-extensions.zip",
     )
     config.add_argument(
         "--install-server", action="store_true", help="Install coder-server"
@@ -52,23 +62,48 @@ def main():
     server = CoderServer()
     file_browser = WebFileBrowser()
 
-    if args.install or args.install_server:
-        server.install_server()
+    if args.install_from is not None:
+        # Создаем временную директорию
+        tmp_dir = tempfile.mkdtemp(prefix="jupyter_coder_")
 
-    if args.install or args.install_settings:
-        server.install_settings()
+        try:
+            # Разархивируем .zip архив во временную папку
+            zip_path = pathlib.Path(args.install_from).expanduser().resolve()
+            print(f"Extracting {zip_path} to {tmp_dir}...")
 
-    if args.install or args.patch_tornado:
-        server.patch_tornado()
+            with zipfile.ZipFile(zip_path, "r") as zip_ref:
+                zip_ref.extractall(tmp_dir)
 
-    if args.install or args.install_extensions:
-        server.install_extensions()
+            print(f"Installing from {tmp_dir}...")
 
-    if args.install or args.install_filebrowser:
-        file_browser.install_filebrowser()
+            # Устанавливаем из временной папки
+            server.full_install(tmp_dir)
+            file_browser.full_install(tmp_dir)
 
-    if args.remove or args.remove_server:
-        server.clean_up(full=True)
+            print("Installation completed successfully!")
 
-    if args.remove or args.remove_filebrowser:
-        file_browser.clean_up(full=True)
+        finally:
+            # Удаляем временную папку с содержимым
+            print(f"Cleaning up {tmp_dir}...")
+            shutil.rmtree(tmp_dir, ignore_errors=True)
+    else:
+        if args.install or args.install_server:
+            server.install_server()
+
+        if args.install or args.install_settings:
+            server.install_settings()
+
+        if args.install or args.patch_tornado:
+            server.patch_tornado()
+
+        if args.install or args.install_extensions:
+            server.install_extensions()
+
+        if args.install or args.install_filebrowser:
+            file_browser.install_filebrowser()
+
+        if args.remove or args.remove_server:
+            server.clean_up(full=True)
+
+        if args.remove or args.remove_filebrowser:
+            file_browser.clean_up(full=True)

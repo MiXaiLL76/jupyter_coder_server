@@ -19,6 +19,7 @@ WEB_FILE_BROWSER_RELEASES = (
 FILE_BROWSER_DATABASE = os.environ.get("FILE_BROWSER_DATABASE", "/tmp/filebrowser.db")
 FILE_BROWSER_IMG_PROCESSORS = int(os.environ.get("FILE_BROWSER_IMG_PROCESSORS", "4"))
 FILE_BROWSER_ROOT_PATH = os.environ.get("FILE_BROWSER_ROOT_PATH", "/")
+FILE_BROWSER_DOWNLOAD_URL = os.environ.get("FILE_BROWSER_DOWNLOAD_URL")
 
 
 def get_file_browser_base_url():
@@ -114,7 +115,7 @@ class WebFileBrowser:
             LOGGER.warning("filebrowser is not installed")
             return False
 
-    def install_filebrowser(self):
+    def install_filebrowser(self, from_folder: str = None):
         """
         https://filebrowser.org/installation
         """
@@ -131,27 +132,40 @@ class WebFileBrowser:
                 version=self.WEB_FILE_BROWSER_VERSION
             )
 
-        try:
-            release_dict = get_github_json(api_link)
-            latest_tag = release_dict["tag_name"]
-            LOGGER.info(f"latest_tag: {latest_tag}")
+        if from_folder is not None:
+            FILE_BROWSER_DOWNLOAD_URL = list(
+                pathlib.Path(from_folder).glob("*filebrowser.tar.gz")
+            )
+            if len(FILE_BROWSER_DOWNLOAD_URL) == 0:
+                raise FileNotFoundError("Failed to get release info from folder!")
+            else:
+                FILE_BROWSER_DOWNLOAD_URL = str(FILE_BROWSER_DOWNLOAD_URL[0])
 
-            if latest_tag.startswith("v"):
-                latest_tag = latest_tag[1:]
+        if FILE_BROWSER_DOWNLOAD_URL is None:
+            try:
+                release_dict = get_github_json(api_link)
+                latest_tag = release_dict["tag_name"]
+                LOGGER.info(f"latest_tag: {latest_tag}")
 
-            download_url = None
-            for assets in release_dict["assets"]:
-                if assets["name"] == "linux-amd64-filebrowser.tar.gz":
-                    download_url = assets["browser_download_url"]
-                    LOGGER.info(f"download_url: {download_url}")
-                    break
+                if latest_tag.startswith("v"):
+                    latest_tag = latest_tag[1:]
 
-            assert download_url is not None, "download_url is None"
-        except Exception as e:
-            LOGGER.warning(f"Failed to get release info from GitHub API: {e}")
-            LOGGER.info("Using hardcoded fallback for filebrowser v2.42.5")
-            latest_tag = "2.42.5"
-            download_url = "https://github.com/filebrowser/filebrowser/releases/download/v2.42.5/linux-amd64-filebrowser.tar.gz"
+                download_url = None
+                for assets in release_dict["assets"]:
+                    if assets["name"] == "linux-amd64-filebrowser.tar.gz":
+                        download_url = assets["browser_download_url"]
+                        LOGGER.info(f"download_url: {download_url}")
+                        break
+
+                assert download_url is not None, "download_url is None"
+            except Exception as e:
+                LOGGER.warning(f"Failed to get release info from GitHub API: {e}")
+                LOGGER.info("Using hardcoded fallback for filebrowser v2.42.5")
+                latest_tag = "2.42.5"
+                download_url = "https://github.com/filebrowser/filebrowser/releases/download/v2.42.5/linux-amd64-filebrowser.tar.gz"
+        else:
+            download_url = FILE_BROWSER_DOWNLOAD_URL
+            LOGGER.info(f"Using hardcoded fallback for filebrowser [{download_url}]")
 
         filebrowser_file = self.install_dir.joinpath("bin/filebrowser")
         LOGGER.info(f"filebrowser_file: {filebrowser_file}")
@@ -162,7 +176,10 @@ class WebFileBrowser:
 
         self.install_dir.joinpath("bin").mkdir(parents=True, exist_ok=True)
 
-        download_file = pathlib.Path("/tmp/").joinpath(download_url.split("/")[-1])
+        if download_url.startswith("http"):
+            download_file = pathlib.Path("/tmp/").joinpath(download_url.split("/")[-1])
+        else:
+            download_file = pathlib.Path(download_url)
 
         if download_file.exists() and download_file.stat().st_size > 0:
             LOGGER.info(f"{download_file} is already exists")
@@ -211,8 +228,8 @@ class WebFileBrowser:
                 else:
                     file.unlink()
 
-    def full_install(self):
-        self.install_filebrowser()
+    def full_install(self, from_folder: str = None):
+        self.install_filebrowser(from_folder)
 
     @classmethod
     def setup_proxy(cls: "WebFileBrowser"):

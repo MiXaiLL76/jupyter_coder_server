@@ -31,8 +31,10 @@ class PostInstallCommand(install):
 
         from jupyter_coder_server.utils import install_labextensions
 
-        install_labextensions()
-
+        try:
+            install_labextensions()
+        except PermissionError:
+            print("Install install labextensions failed")
         return value
 
 
@@ -62,6 +64,8 @@ setuptools.setup(
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
+        "Programming Language :: Python :: 3.14",
     ],
     python_requires=">=3.8",
     entry_points={
