@@ -3,7 +3,6 @@ import pathlib
 import json
 import sys
 import shutil
-import re
 
 try:
     from jupyter_coder_server.utils import (
@@ -280,27 +279,45 @@ class CoderServer:
     def full_install(self, from_folder: str = None):
         self.install_server(from_folder)
         self.install_settings()
+        self.patch_tornado()
 
         if from_folder is not None:
-            # Sort extensions by numeric prefix in filename to ensure correct installation order
-            # Files are named like: 01-ms-python.vscode-python-envs.vsix, 02-ms-python.debugpy.vsix
-            # This ensures dependencies are installed before main packages
-            def get_sort_key(path):
-                # Extract numeric prefix (e.g., "01" from "01-ms-python.vscode-python-envs.vsix")
-                match = re.match(r"^(\d+)-", path.name)
-                if match:
-                    return (int(match.group(1)), path.name)
-                # If no prefix, sort alphabetically at the end
-                return (float("inf"), path.name)
+            # Check if extensions folder exists
+            extensions_source = pathlib.Path(from_folder).joinpath("extensions")
+            extensions_json = extensions_source.joinpath("extensions.json")
 
-            extensions = sorted(
-                list(pathlib.Path(from_folder).glob("*.vsix")), key=get_sort_key
-            )
+            if extensions_source.exists() and extensions_json.exists():
+                LOGGER.info(f"Found extensions folder at {extensions_source}")
+
+                # Create target extensions directory
+                extensions_target = self.install_dir.joinpath(
+                    "share/code-server/extensions"
+                )
+                extensions_target.mkdir(parents=True, exist_ok=True)
+
+                # Copy entire extensions directory structure
+                LOGGER.info(
+                    f"Copying extensions from {extensions_source} to {extensions_target}"
+                )
+                for item in extensions_source.iterdir():
+                    target_path = extensions_target.joinpath(item.name)
+
+                    if item.is_dir():
+                        # Remove existing directory if it exists
+                        if target_path.exists():
+                            shutil.rmtree(target_path)
+                        shutil.copytree(item, target_path)
+                    else:
+                        # Copy file
+                        shutil.copy2(item, target_path)
+
+                LOGGER.info("Extensions copied successfully")
+            else:
+                LOGGER.warning(
+                    f"Extensions folder or extensions.json not found in {from_folder}"
+                )
         else:
-            extensions = DEFAULT_EXTENSIONS
-
-        self.install_extensions(extensions)
-        self.patch_tornado()
+            self.install_extensions()
 
     @classmethod
     def setup_proxy(cls: "CoderServer"):

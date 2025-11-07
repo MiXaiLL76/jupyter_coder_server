@@ -84,17 +84,6 @@ This will create `jupyter-coder-extensions.zip` containing:
 - filebrowser binary
 - All VSCode extensions (Python, Jupyter, Ruff, Continue, etc.)
 
-**Extension Installation Order:**
-Extensions are downloaded with numeric prefixes (01-, 02-, etc.) to ensure correct installation order:
-
-1. Python dependencies: `vscode-python-envs`, `debugpy`
-2. Main Python extension: `python`
-3. Jupyter dependencies: `jupyter-keymap`, `vscode-jupyter-slideshow`, `vscode-jupyter-cell-tags`, `jupyter-renderers`
-4. Main Jupyter extension: `jupyter`
-5. Other tools: `ruff`, `continue`
-
-The `make build_ext` command is smart - it won't re-download files that already exist, making it safe to re-run.
-
 #### Step 2: Transfer and install
 
 Copy `jupyter-coder-extensions.zip` to your target machine and install:

@@ -19,45 +19,37 @@ remove_server:
 install: sdist
 	pip3 install dist/*
 
-# Function to download VSCode extension from open-vsx.org
-# Usage: $(call download_extension,prefix,publisher,extension_name)
-define download_extension
-	@echo "Downloading $(2).$(3)..."
-	test -f ext/$(1)-$(2).$(3).vsix || curl -sL -o ext/$(1)-$(2).$(3).vsix "$$(curl -sX GET https://open-vsx.org/api/$(2)/$(3) | jq -r '.downloads.universal // .downloads."linux-x64"')"
-endef
-
 build_ext:
+	$(eval CODE_SERVER_VERSION := 4.105.1)
+	$(eval FILEBROWSER_VERSION := 2.42.5)
+	$(eval CONTAINER_NAME := code-server-ext-builder)
+
 	@echo "Creating ext directory..."
-	mkdir -p -m 777 ext
+	mkdir -p -m 777 ext/extensions
 
 	@echo "Downloading code-server and filebrowser..."
-	test -f ext/code-server-4.105.1-linux-amd64.tar.gz || curl -sL -o ext/code-server-4.105.1-linux-amd64.tar.gz https://github.com/coder/code-server/releases/download/v4.105.1/code-server-4.105.1-linux-amd64.tar.gz
-	test -f ext/linux-amd64-filebrowser.tar.gz || curl -sL -o ext/linux-amd64-filebrowser.tar.gz https://github.com/filebrowser/filebrowser/releases/download/v2.42.5/linux-amd64-filebrowser.tar.gz
+	test -f ext/code-server-$(CODE_SERVER_VERSION)-linux-amd64.tar.gz || curl -sL -o ext/code-server-$(CODE_SERVER_VERSION)-linux-amd64.tar.gz https://github.com/coder/code-server/releases/download/v$(CODE_SERVER_VERSION)/code-server-$(CODE_SERVER_VERSION)-linux-amd64.tar.gz
+	test -f ext/linux-amd64-filebrowser.tar.gz || curl -sL -o ext/linux-amd64-filebrowser.tar.gz https://github.com/filebrowser/filebrowser/releases/download/v$(FILEBROWSER_VERSION)/linux-amd64-filebrowser.tar.gz
 
-	@echo "Downloading VSCode extensions in correct dependency order..."
+	@echo "Starting Docker container for extension installation..."
+	docker run -d --name $(CONTAINER_NAME) -v ./ext/extensions:/config/.local/share/code-server/extensions/ lscr.io/linuxserver/code-server:$(CODE_SERVER_VERSION)
 
-	# Python dependencies first
-	$(call download_extension,01,ms-python,vscode-python-envs)
-	$(call download_extension,02,ms-python,debugpy)
+	@echo "Waiting for container to be ready..."
+	sleep 5
 
-	# Main Python extension
-	$(call download_extension,03,ms-python,python)
+	@echo "Installing VSCode extensions in correct dependency order..."
+	docker exec $(CONTAINER_NAME) /app/code-server/bin/code-server --install-extension ms-python.python
+	docker exec $(CONTAINER_NAME) /app/code-server/bin/code-server --install-extension ms-toolsai.jupyter
+	docker exec $(CONTAINER_NAME) /app/code-server/bin/code-server --install-extension charliermarsh.ruff
+	docker exec $(CONTAINER_NAME) /app/code-server/bin/code-server --install-extension Continue.continue
+	docker exec $(CONTAINER_NAME) chmod -R 777 /config/.local/share/code-server/extensions/
 
-	# Jupyter dependencies
-	$(call download_extension,04,ms-toolsai,jupyter-keymap)
-	$(call download_extension,05,ms-toolsai,vscode-jupyter-slideshow)
-	$(call download_extension,06,ms-toolsai,vscode-jupyter-cell-tags)
-	$(call download_extension,07,ms-toolsai,jupyter-renderers)
-
-	# Main Jupyter extension
-	$(call download_extension,08,ms-toolsai,jupyter)
-
-	# Other extensions
-	$(call download_extension,09,charliermarsh,ruff)
-	$(call download_extension,10,Continue,continue)
+	@echo "Stopping and removing Docker container..."
+	docker stop $(CONTAINER_NAME)
+	docker rm $(CONTAINER_NAME)
 
 	@echo "Creating ZIP archive..."
-	cd ext && zip -r ../jupyter-coder-extensions.zip *
+	rm -rf jupyter-coder-extensions.zip && cd ext && zip -r ../jupyter-coder-extensions.zip *
 
 	@echo "Cleaning up ext directory..."
 	rm -rf ext
